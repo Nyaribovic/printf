@@ -1,79 +1,57 @@
-#include <stdarg.h>
 #include <unistd.h>
-#include "main.h"
+#include <stdlib.h>
+#include <stdarg.h>
 
-/**
-  * find_function - function that finds formats for _printf
-  * calls the corresponding function.
-  * @format: format (char, string, int, decimal)
-  * Return: NULL or function associated ;
-  */
-int (*find_function(const char *format))(va_list)
-{
-	unsigned int i = 0;
-	code_f find_f[] = {
-		{"c", print_char},
-		{"s", print_string},
-		{"i", print_int},
-		{"d", print_dec},
-		{"r", print_rev},
-		{"b", print_bin},
-		{"u", print_unsig},
-		{"o", print_octal},
-		{"x", print_x},
-		{"X", print_X},
-		{"R", print_rot13},
-		{NULL, NULL}
-	};
+int _printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
 
-	while (find_f[i].sc)
-	{
-		if (find_f[i].sc[0] == (*format))
-			return (find_f[i].f);
-		i++;
-	}
-	return (NULL);
+    int num_chars = 0;
+    while (*format) {
+        if (*format == '%') {
+            format++;
+            switch (*format) {
+                case 'c': {
+                    char c = va_arg(args, int);
+                    write(1, &c, sizeof(char));
+                    num_chars++;
+                    break;
+                }
+                case 's': {
+                    char *str = va_arg(args, char *);
+                    int len = 0;
+                    while (str[len]) len++;
+                    write(1, str, len);
+                    num_chars += len;
+                    break;
+                }
+                case '%': {
+                    char percent = '%';
+                    write(1, &percent, sizeof(char));
+                    num_chars++;
+                    break;
+                }
+                default:
+                    write(2, "Error: Unknown conversion specifier\n", 36);
+                    va_end(args);
+                    return(-1);
+            }
+        } else {
+            write(1, format, sizeof(char));
+            num_chars++;
+        }
+
+        format++;
+    }
+
+    va_end(args);
+    return (num_chars);
 }
-/**
-  * _printf - function that produces output according to a format.
-  * @format: format (char, string, int, decimal)
-  * Return: size the output text;
-  */
-int _printf(const char *format, ...)
-{
-	va_list ap;
-	int (*f)(va_list);
-	unsigned int i = 0, cprint = 0;
 
-	if (format == NULL)
-		return (-1);
-	va_start(ap, format);
-	while (format[i])
-	{
-		while (format[i] != '%' && format[i])
-		{
-			_putchar(format[i]);
-			cprint++;
-			i++;
-		}
-		if (format[i] == '\0')
-			return (cprint);
-		f = find_function(&format[i + 1]);
-		if (f != NULL)
-		{
-			cprint += f(ap);
-			i += 2;
-			continue;
-		}
-		if (!format[i + 1])
-			return (-1);
-		_putchar(format[i]);
-		cprint++;
-		if (format[i + 1] == '%')
-			i += 2;
-		else
-			i++;
-	}
-	va_end(ap);
-	return (cprint);
+/* Test the function*/
+int main() {
+    int result = _printf("Hello, %s! Today is %c.\n", "Alice", 'S');
+    _printf("Number of characters printed: %d\n", result);
+    return (0);
 }
+
