@@ -5,66 +5,63 @@ i/*
  *      
  */
 
-#include <unistd.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include "main.h"
+
 /**
- * _printf - Outputs a formatted string.
- * @format: Character string to print - may contain directives.
+ * _printf - Custom printf function that handles c, s, and % conversion specifiers.
+ * @format: The format string containing the conversion specifiers.
  *
- * Return: The number of characters printed.
+ * Return: The number of characters printed (excluding the null byte used to end output to strings).
  */
 int _printf(const char *format, ...)
 {
     va_list args;
-    va_start(args, format);
+    int count = 0;
+    const char *c;
 
-    int num_chars = 0;
-    while (*format)
+    va_start(args, format);
+    for (c = format; *c != '\0'; c++)
     {
-        if (*format == '%')
+        if (*c != '%')
         {
-            format++;
-            if (*format == 'c')
-            {
-                char ch = va_arg(args, int);
-                write(1, &ch, 1);
-                num_chars++;
-            }
-            else if (*format == 's')
-            {
-                char *str = va_arg(args, char*);
-                int len = 0;
-                while (str[len] != '\0')
-                {
-                    len++;
-                }
-                write(1, str, len);
-                num_chars += len;
-            }
-            else if (*format == '%')
-            {
-                write(1, "%", 1);
-                num_chars++;
-            }
-            else
-            {
-                /* Invalid conversion specifier, write an error message */
-                write(2, "Error: Unknown conversion specifier\n", 36);
-                va_end(args);
-                return (-1);
-            }
+            putchar(*c);
+            count++;
         }
         else
         {
-            /* Regular character, write it to stdout */
-            write(1, format, 1);
-            num_chars++;
+            c++;
+            if (*c == 'c')
+            {
+                char ch = va_arg(args, int);
+                putchar(ch);
+                count++;
+            }
+            else if (*c == 's')
+            {
+                char *str = va_arg(args, char *);
+                while (*str != '\0')
+                {
+                    putchar(*str);
+                    str++;
+                    count++;
+                }
+            }
+            else if (*c == '%')
+            {
+                putchar('%');
+                count++;
+            }
+            else
+            {
+                putchar('%');
+                putchar(*c);
+                count += 2;
+            }
         }
-
-        format++;
     }
-
     va_end(args);
-    return (num_chars);
+
+    return count;
 }
